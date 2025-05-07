@@ -1,0 +1,23 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: ac11950-mnist-downloader
+spec:
+  restartPolicy: Never
+  containers:
+  - name: mnist-data-downloader
+    image: python:3.10-slim
+    command:
+      - bash
+      - -c
+      - |
+        pip install torch torchvision --no-cache-dir && \
+        python -c "from torchvision import datasets; datasets.MNIST('/mnt', train=True, download=True); datasets.MNIST('/mnt', train=False, download=True)" && \
+        sleep infinity
+    volumeMounts:
+    - name: mnist-model-data
+      mountPath: /mnt
+  volumes:
+  - name: mnist-model-data
+    persistentVolumeClaim:
+      claimName: ac11950-model-pvc

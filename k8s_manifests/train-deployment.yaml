@@ -1,0 +1,20 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: ac11950-train-job
+spec:
+  template:
+    metadata:
+      name: ac11950-train-job
+    spec:
+      containers:
+      - name: model-trainer
+        image: abhishekchigurupati/modeltrain:latest
+        volumeMounts:
+        - name: ac11950-model-pvc
+          mountPath: /mnt
+      restartPolicy: Never
+      volumes:
+      - name: ac11950-model-pvc
+        persistentVolumeClaim:
+          claimName: ac11950-model-pvc

@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Digit Classifier - MNIST</title>
+</head>
+<body>
+    <h1>Upload a Handwritten Digit (MNIST-style)</h1>
+    <form method="POST" action="/classify-digit" enctype="multipart/form-data">
+        <input type="file" name="digitfile" accept="image/*" required>
+        <input type="submit" value="Classify">
+    </form>
+
+    {% if prediction is defined %}
+        <h2>Predicted Digit: {{ prediction }}</h2>
+    {% endif %}
+</body>
+</html>
