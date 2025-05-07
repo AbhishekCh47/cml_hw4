@@ -10,7 +10,7 @@ This project demonstrates an end-to-end machine learning workflow using Kubernet
 ├── config_yaml/         # Kubernetes YAMLs for PVC, training job, inference deployment, and service
 ├── inference/           # Flask-based inference app and Dockerfile
 ├── model_train/         # PyTorch training script and Dockerfile
-└── ssb10002_hw4.pdf     # Project report
+└── ac11950_hw4.pdf     # Project report
 ```
 
 ## Setup Instructions
@@ -18,10 +18,10 @@ This project demonstrates an end-to-end machine learning workflow using Kubernet
 1. **Build and push Docker images**:
    ```bash
    docker build -t model_train ./model_train
-   docker push hyperion101010/model_train:latest
+   docker push ac11950/model_train:latest
 
    docker build -t inference ./inference
-   docker push hyperion101010/inference:latest
+   docker push ac11950/inference:latest
    ```
 
 2. **Provision resources on GKE**:
@@ -48,4 +48,4 @@ This project demonstrates an end-to-end machine learning workflow using Kubernet
 
 ---
 
-© Shivam Balikondwar — NYU CS, 2025
+
