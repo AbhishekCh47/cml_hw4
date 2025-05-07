@@ -6,76 +6,74 @@ import torch.nn.functional as F
 from torchvision import transforms
 import torch.nn as nn
 
-# Define the CNN model
+# Define the CNN model (matching the training model architecture)
 class DigitClassifier(nn.Module):
     def __init__(self):
         super(DigitClassifier, self).__init__()
-        self.c1 = nn.Conv2d(1, 32, 3, 1)
-        self.c2 = nn.Conv2d(32, 64, 3, 1)
-        self.d1 = nn.Dropout(0.25)
-        self.d2 = nn.Dropout(0.5)
-        self.fc_a = nn.Linear(9216, 128)
-        self.fc_b = nn.Linear(128, 10)
+        self.layer1 = nn.Conv2d(1, 32, 3, 1)   # First convolution layer
+        self.layer2 = nn.Conv2d(32, 64, 3, 1)  # Second convolution layer
+        self.drop_a = nn.Dropout(0.25)         # Dropout layer
+        self.drop_b = nn.Dropout(0.5)          # Dropout layer
+        self.dense1 = nn.Linear(9216, 128)     # Fully connected layer 1
+        self.dense2 = nn.Linear(128, 10)       # Fully connected layer 2
 
-    def forward(self, img):
-        img = self.c1(img)
-        img = F.relu(img)
-        img = self.c2(img)
-        img = F.relu(img)
-        img = F.max_pool2d(img, 2)
-        img = self.d1(img)
-        img = torch.flatten(img, 1)
-        img = self.fc_a(img)
-        img = F.relu(img)
-        img = self.d2(img)
-        img = self.fc_b(img)
-        return F.log_softmax(img, dim=1)
+    def forward(self, x):
+        x = self.layer1(x)
+        x = F.relu(x)
+        x = self.layer2(x)
+        x = F.relu(x)
+        x = F.max_pool2d(x, 2)
+        x = self.drop_a(x)
+        x = torch.flatten(x, 1)
+        x = self.dense1(x)
+        x = F.relu(x)
+        x = self.drop_b(x)
+        x = self.dense2(x)
+        return F.log_softmax(x, dim=1)
 
-# Initialize Flask app
-webapp = Flask(__name__)
+# Flask app setup
+app = Flask(__name__)
+UPLOAD_FOLDER = 'uploads'
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
-# Create upload folder
-IMAGE_UPLOAD_DIR = 'user_uploads'
-os.makedirs(IMAGE_UPLOAD_DIR, exist_ok=True)
-webapp.config['UPLOAD_FOLDER'] = IMAGE_UPLOAD_DIR
-
-# Load model on CPU
-runtime_device = torch.device("cpu")
-digit_model = DigitClassifier().to(runtime_device)
-digit_model.load_state_dict(torch.load("/mnt/ac11950_model.pt", map_location=runtime_device))
+# Load the trained model
+device = torch.device("cpu")
+digit_model = DigitClassifier().to(device)
+digit_model.load_state_dict(torch.load("/mnt/ac11950_model.pt", map_location=device))
 digit_model.eval()
 
-# Image transformation pipeline
-preprocess = transforms.Compose([
+# Transformation pipeline for input images
+transform = transforms.Compose([
     transforms.Grayscale(num_output_channels=1),
     transforms.Resize((28, 28)),
     transforms.ToTensor(),
     transforms.Normalize((0.1307,), (0.3081,))
 ])
 
-# Home route
-@webapp.route('/home')
-def main_page():
+# Route for home page
+@app.route('/')
+def home_page():
     return render_template("mnist.html")
 
-# Prediction route
-@webapp.route('/classify-digit', methods=['POST'])
+# Route for prediction
+@app.route('/classify', methods=['POST'])
 def classify_digit():
-    if 'digitfile' not in request.files:
+    if 'file' not in request.files:
         return "No file uploaded", 400
-    digitfile = request.files['digitfile']
-    if digitfile.filename == '':
+    file = request.files['file']
+    if file.filename == '':
         return "Empty filename", 400
 
-    img_obj = Image.open(digitfile).convert("L")
-    input_tensor = preprocess(img_obj).unsqueeze(0)
+    image = Image.open(file).convert("L")
+    image = transform(image).unsqueeze(0)
 
     with torch.no_grad():
-        result = digit_model(input_tensor)
-        prediction = result.argmax(dim=1, keepdim=True).item()
+        output = digit_model(image)
+        pred = output.argmax(dim=1, keepdim=True).item()
 
-    return render_template("mnist.html", prediction=prediction)
+    return render_template("mnist.html", prediction=pred)
 
-# Start app
+# Run the Flask app
 if __name__ == '__main__':
-    webapp.run(host="0.0.0.0", port=5000, debug=True)
+    app.run(host="0.0.0.0", port=5000, debug=True)
