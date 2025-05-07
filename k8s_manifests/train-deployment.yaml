@@ -9,7 +9,7 @@ spec:
     spec:
       containers:
       - name: model-trainer
-        image: abhishekchigurupati/modeltraingcp:latest
+        image: abhishekchigurupati/model-train-gcp:latest
         volumeMounts:
         - name: ac11950-model-pvc
           mountPath: /mnt

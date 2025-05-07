@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
       - name: inference-container
-        image: abhishekchigurupati/inferencegcp:latest
+        image: abhishekchigurupati/inference-gcp:latest
         ports:
         - containerPort: 5000
         volumeMounts:
