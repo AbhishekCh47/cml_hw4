@@ -1,51 +1,79 @@
+# MNIST Digit Classifier on Kubernetes (GKE)
 
-# MNIST on Kubernetes (HW4)
+A cloud-native machine learning pipeline that demonstrates containerized training and inference 
+deployed on Google Kubernetes Engine using the MNIST handwritten digit dataset.
 
-This project demonstrates an end-to-end machine learning workflow using Kubernetes on Google Cloud Platform (GCP). It trains a model on the MNIST dataset, saves it to persistent storage, and serves inferences via a Flask web app.
+## Live Demo
 
-## Project Structure
+**Try it yourself:** [http://34.9.53.127]
 
-```
+## 📋 Project Overview
+
+This project implements a complete ML workflow on Kubernetes:
+- Containerized model training with PyTorch
+- Persistent model storage using Kubernetes volumes
+- Real-time inference service through a web interface
+- End-to-end orchestration with Kubernetes on GCP
+
+## Repository Structure
 .
-├── config_yaml/         # Kubernetes YAMLs for PVC, training job, inference deployment, and service
-├── inference/           # Flask-based inference app and Dockerfile
-├── model_train/         # PyTorch training script and Dockerfile
-└── ac11950_hw4.pdf     # Project report
-```
+├── config_yaml/         # Kubernetes configuration manifests
+│   ├── persistent-volume.yaml
+│   ├── mnist-data-loader.yaml
+│   ├── train-job.yaml
+│   ├── inference-deployment.yaml
+│   └── inference-service.yaml
+├── inference/           # Inference service
+│   ├── Dockerfile
+│   ├── requirements.txt
+│   ├── serve_model.py
+│   └── templates/
+│       └── mnist.html
+├── model_train/         # Model training
+│   ├── Dockerfile
+│   ├── requirements.txt
+│   └── train_model.py
+└── ac11950_hw4_report.pdf     # Project documentation
 
-## Setup Instructions
+## Deployment Instructions
 
-1. **Build and push Docker images**:
-   ```bash
-   docker build -t model_train ./model_train
-   docker push ac11950/model_train:latest
+### 1. Build and Push Docker Images
 
-   docker build -t inference ./inference
-   docker push ac11950/inference:latest
-   ```
+```bash
+# Build and push training image
+cd model_train
+docker build -t abhishekchigurupati/modeltraingcp:latest .
+docker push abhishekchigurupati/modeltraingcp:latest
 
-2. **Provision resources on GKE**:
-   ```bash
-   kubectl apply -f config_yaml/pvc.yaml
-   kubectl apply -f config_yaml/train.yaml
-   kubectl apply -f config_yaml/inference.yaml
-   kubectl apply -f config_yaml/lb.yaml
-   ```
+# Build and push inference image
+cd ../inference
+docker build -t abhishekchigurupati/inferencegcp:latest .
+docker push abhishekchigurupati/inferencegcp:latest
+2. Deploy to Kubernetes
+bash# Create persistent storage
+kubectl apply -f config_yaml/persistent-volume.yaml
 
-3. **Access the app**:
-   - Get the external IP from the service:
-     ```bash
-     kubectl get svc service-pod-name
-     ```
-   - Open the IP in a browser and upload a digit image via the form.
+# Deploy data preparation pod
+kubectl apply -f config_yaml/mnist-data-loader.yaml
 
-## Key Features
+# Run training job
+kubectl apply -f config_yaml/train-job.yaml
 
-- Training job runs as a Kubernetes Job and saves weights to a PersistentVolume.
-- Flask app loads model weights from the same PVC for inference.
-- Liveness/readiness probes ensure service health.
-- Fully containerized and orchestrated on GCP.
+# Deploy inference service
+kubectl apply -f config_yaml/inference-deployment.yaml
+kubectl apply -f config_yaml/inference-service.yaml
+3. Access the Application
+bash# Get external IP of the inference service
+kubectl get svc ac11950-inference-service
+Visit the external IP in a web browser to access the handwritten digit classifier.
 
----
+Key Features
 
+Microservices Architecture: Separate containers for training and inference
+Stateful Machine Learning: Shared model artifacts through Kubernetes PVC
+Cloud-Native Deployment: Fully orchestrated on GKE
+Scalable Design: Independent scaling of training and inference components
+Interactive Web Interface: User-friendly digit classification through file upload
 
+Author
+Abhishek Chigurupati (ac11950)
